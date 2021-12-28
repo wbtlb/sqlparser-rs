@@ -361,6 +361,15 @@ impl<'a> Tokenizer<'a> {
                     }
                     Ok(Some(Token::Whitespace(Whitespace::Newline)))
                 }
+                '?' => {
+                    chars.next();
+                    match chars.peek() {
+                        _ => {
+                            let s = self.tokenize_word('?', chars);
+                            Ok(Some(Token::make_word(&s, None)))
+                        }
+                    }
+                }
                 'N' => {
                     chars.next(); // consume, to check the next char
                     match chars.peek() {
@@ -413,6 +422,10 @@ impl<'a> Tokenizer<'a> {
                     let s = self.tokenize_single_quoted_string(chars)?;
                     Ok(Some(Token::SingleQuotedString(s)))
                 }
+                '`' => {
+                    let s = self.tokenize_single_quoted_string(chars)?;
+                    Ok(Some(Token::SingleQuotedString(s)))
+                }
                 // delimited (quoted) identifier
                 quote_start if self.dialect.is_delimited_identifier_start(quote_start) => {
                     chars.next(); // consume the opening quote
@@ -428,7 +441,7 @@ impl<'a> Tokenizer<'a> {
                     }
                 }
                 // numbers and period
-                '0'..='9' | '.' => {
+                '0'..='9' | '.'=> {
                     let mut s = peeking_take_while(chars, |ch| matches!(ch, '0'..='9'));
 
                     // match binary literal that starts with 0x
